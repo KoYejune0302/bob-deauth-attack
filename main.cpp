@@ -1,4 +1,3 @@
-// main.cpp
 #include <iostream>
 #include <cstring>
 #include <cstdlib>
@@ -57,7 +56,6 @@ bool getIfaceMac(const char* ifaceName, uint8_t* ifaceMac) {
     return true;
 }
 
-
 int main(int argc, char* argv[]) {
     if (argc < 3) {
         std::cerr << "Usage: deauth-attack <interface> <ap mac> [<station mac> [-auth]]\n";
@@ -83,13 +81,11 @@ int main(int argc, char* argv[]) {
     for(int i=0; i<6; ++i) std::cout << (int)ifaceMac[i] << (i<5 ? ":" : "");
     std::cout << std::dec << std::endl;
 
-
     if (!parseMac(argv[2], apMac)) {
         std::cerr << "[-] Invalid AP MAC address\n";
         return -1;
     }
     std::cout << "[+] AP MAC address: " << argv[2] << std::endl;
-
 
     bool hasStation = false;
     bool isAuth = false;
