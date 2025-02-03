@@ -17,7 +17,7 @@ static inline bool sendAuthFrame(int sock, const uint8_t* ifaceMac, const uint8_
     // Authentication frame
     uint8_t frame[30] = {0};
 
-    // Frame Control: Authentication (0xB0 - Incorrect, should be 0x00 0x00 for Open System Auth Request)
+    // Frame Control: Authentication (Should be 0x00 0x00 for Open System Auth Request)
     frame[0] = 0x00;
     frame[1] = 0x00;
 
@@ -40,15 +40,15 @@ static inline bool sendAuthFrame(int sock, const uint8_t* ifaceMac, const uint8_
 
     // Authentication Algorithm Number: Open System (0)
     frame[24] = 0x00;
-    frame[25] = 0x00; // Corrected to 0x0000 - two bytes for Algorithm Number
+    frame[25] = 0x00; // 0x0000 - two bytes for Algorithm Number
 
     // Authentication Transaction Sequence Number: 1 (Request)
     frame[26] = 0x01;
-    frame[27] = 0x00; // Corrected to 0x0001 - two bytes for Sequence Number
+    frame[27] = 0x00; // 0x0001 - two bytes for Sequence Number
 
     // Status Code: 0 (Success - for request, it's always 0 in request)
     frame[28] = 0x00;
-    frame[29] = 0x00; // Corrected to 0x0000 - two bytes for Status Code
+    frame[29] = 0x00; // 0x0000 - two bytes for Status Code
 
     // Combine Radiotap header and authentication frame
     uint8_t packet[sizeof(radiotap_header) + sizeof(frame)];
