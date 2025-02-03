@@ -4,7 +4,7 @@
 #include <cstring>
 #include <iostream>
 
-static inline bool sendAuthFrame(int sock, const uint8_t* ifaceMac, const uint8_t* apMac, const uint8_t* stationMac) {
+static inline bool sendAuthFrame(int sock, const uint8_t* apMac, const uint8_t* stationMac) {
     // Radiotap header
     uint8_t radiotap_header[] = {
         0x00, 0x00, // Radiotap version
@@ -28,8 +28,8 @@ static inline bool sendAuthFrame(int sock, const uint8_t* ifaceMac, const uint8_
     // Address 1: Destination Address (AP MAC)
     memcpy(frame + 4, apMac, 6);
 
-    // Address 2: Source Address (Your interface MAC)
-    memcpy(frame + 10, ifaceMac, 6);
+    // Address 2: Source Address (Station MAC)
+    memcpy(frame + 10, stationMac, 6);
 
     // Address 3: BSSID (AP MAC)
     memcpy(frame + 16, apMac, 6);
