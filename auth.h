@@ -1,4 +1,3 @@
-// auth.h
 #pragma once
 #include <stdint.h>
 #include <sys/socket.h>
@@ -6,6 +5,16 @@
 #include <iostream>
 
 static inline bool sendAuthFrame(int sock, const uint8_t* ifaceMac, const uint8_t* apMac, const uint8_t* stMac) {
+    // Radiotap header
+    uint8_t radiotap_header[] = {
+        0x00, 0x00, // <-- radiotap version
+        0x0c, 0x00, // <-- radiotap header length
+        0x04, 0x80, 0x00, 0x00, // <-- radiotap present flags
+        0x00, 0x00, // <-- radiotap flags
+        0x18, 0x00  // <-- radiotap data rate (24 Mbps)
+    };
+
+    // Authentication frame
     uint8_t frame[30] = {0};
 
     // Frame Control: Authentication (0xB0 - Incorrect, should be 0x00 0x00 for Open System Auth Request)
@@ -41,5 +50,10 @@ static inline bool sendAuthFrame(int sock, const uint8_t* ifaceMac, const uint8_
     frame[28] = 0x00;
     frame[29] = 0x00; // Corrected to 0x0000 - two bytes for Status Code
 
-    return send(sock, frame, sizeof(frame), 0) != -1;
+    // Combine Radiotap header and authentication frame
+    uint8_t packet[sizeof(radiotap_header) + sizeof(frame)];
+    memcpy(packet, radiotap_header, sizeof(radiotap_header));
+    memcpy(packet + sizeof(radiotap_header), frame, sizeof(frame));
+
+    return send(sock, packet, sizeof(packet), 0) != -1;
 }
